@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model School {
+  id        String    @id @default(uuid())
+  name      String
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  contacts  Contact[]
+  intelligence Intelligence?
+}
+
+model Contact {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  phone     String
+  isPrimary Boolean  @default(false)
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Intelligence {
+  id                String    @id @default(uuid())
+  name              String
+  source            String
+  intell            String
+  bestTimeToVisit   String
+  location          String
+  estimatedStudents String?
+  schoolType        String?   // Private, Public
+  hasSystem         String?   // Yes, No, Unknown
+  plannedVisitDate  DateTime?
+  status            String    @default("PLANNED") // PLANNED, VISITED, CANCELLED
+  schoolId          String?   @unique
+  school            School?   @relation(fields: [schoolId], references: [id])
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
