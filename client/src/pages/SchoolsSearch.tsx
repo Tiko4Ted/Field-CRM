@@ -8,6 +8,7 @@ interface Contact {
   name: string;
   role: string;
   phone: string;
+  notes: string | null;
   isPrimary: boolean;
 }
 
@@ -15,6 +16,7 @@ interface School {
   id: string;
   name: string;
   notes: string | null;
+  followUpNotes: string | null;
   createdAt: string;
   contacts: Contact[];
 }
@@ -24,22 +26,13 @@ const API = 'http://localhost:3000';
 export default function SchoolsSearch() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const search = query.trim();
 
   const { data: schools = [] } = useQuery<School[]>({
-    queryKey: ['schools'],
-    queryFn: () => fetch(`${API}/schools`).then(r => r.json()),
+    queryKey: ['schools', 'search', search],
+    queryFn: () => fetch(`${API}/schools?search=${encodeURIComponent(search)}`).then(r => r.json()),
+    enabled: search.length > 0,
   });
-
-  const filtered = query.trim()
-    ? schools.filter(s =>
-        s.name.toLowerCase().includes(query.toLowerCase()) ||
-        s.contacts.some(c =>
-          c.name.toLowerCase().includes(query.toLowerCase()) ||
-          c.role.toLowerCase().includes(query.toLowerCase()) ||
-          c.phone.includes(query)
-        )
-      )
-    : [];
 
   return (
     <div className="space-y-4">
@@ -49,7 +42,7 @@ export default function SchoolsSearch() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search schools, contacts, phones…"
+          placeholder="Search schools, contacts, phones..."
           autoFocus
           className="w-full h-12 pl-11 pr-10 rounded-xl border border-border bg-card text-foreground text-sm
                      placeholder:text-muted-foreground
@@ -69,20 +62,20 @@ export default function SchoolsSearch() {
       </div>
 
       {/* Results */}
-      {!query.trim() && (
+      {!search && (
         <p className="text-sm text-muted-foreground text-center py-10">
           Type to search across schools, contacts, and phone numbers.
         </p>
       )}
 
-      {query.trim() && filtered.length === 0 && (
+      {search && schools.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-10">
           No results found for "{query}".
         </p>
       )}
 
       <div className="space-y-2">
-        {filtered.map((school) => (
+        {schools.map((school) => (
           <button
             key={school.id}
             onClick={() => navigate(`/schools/${school.id}`)}

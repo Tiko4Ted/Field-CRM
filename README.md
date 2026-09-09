@@ -18,7 +18,7 @@ It replaces the manual tracking of leads and visits in notebooks by providing a 
 
 - **Frontend**: React, Vite, TypeScript, Tailwind CSS, shadcn/ui, React Router, TanStack Query, React Hook Form, Zod
 - **Backend**: NestJS, Prisma, PostgreSQL
-- **Database Hosting**: Neon Postgres
+- **Database**: PostgreSQL through Docker for local development
 
 ## Structure
 
@@ -28,7 +28,8 @@ It replaces the manual tracking of leads and visits in notebooks by providing a 
 ## Getting Started
 
 1. Clone the repository.
-2. Inside `/api`, create a `.env` file with your `DATABASE_URL` pointing to your PostgreSQL instance.
-3. In `/api`, run `npm install` and `npx prisma db push` to initialize the database schema.
-4. In `/api`, run `npm run start:dev`.
-5. In `/client`, run `npm install` and `npm run dev`.
+2. Copy `/api/.env.example` to `/api/.env`.
+3. Start PostgreSQL from the repo root with `docker compose up -d`.
+4. In `/api`, run `npm install`, `npx prisma generate`, and `npx prisma db push`.
+5. In `/api`, run `npm run start:dev`.
+6. In `/client`, run `npm install` and `npm run dev`.

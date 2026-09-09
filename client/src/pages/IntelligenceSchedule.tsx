@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, MapPin, Clock } from 'lucide-react';
 
@@ -13,6 +14,7 @@ interface Intelligence {
 const API = 'http://localhost:3000';
 
 export default function IntelligenceSchedule() {
+  const navigate = useNavigate();
   const { data: records = [], isLoading } = useQuery<Intelligence[]>({
     queryKey: ['intelligence'],
     queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
@@ -80,18 +82,36 @@ export default function IntelligenceSchedule() {
               </div>
 
               {/* Card Column */}
-              <div className="flex-1 p-4 rounded-2xl bg-card border border-border shadow-sm">
-                <h3 className="text-base font-semibold text-foreground">{record.name}</h3>
-                
-                <div className="mt-3 space-y-2">
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <Clock className="w-4 h-4 mt-0.5 text-primary" />
-                    <span>Best time: {record.bestTimeToVisit}</span>
+              <div className="flex-1 p-4 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-foreground">{record.name}</h3>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <Clock className="w-4 h-4 mt-0.5 text-primary" />
+                      <span>Best time: {record.bestTimeToVisit}</span>
+                    </div>
+                    <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                      <MapPin className="w-4 h-4 mt-0.5 text-primary" />
+                      <span>{record.location}</span>
+                    </div>
                   </div>
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                    <MapPin className="w-4 h-4 mt-0.5 text-primary" />
-                    <span>{record.location}</span>
-                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 mt-4 pt-3 border-t border-border/50">
+                  <button
+                    onClick={() => navigate(`/schools/new`, { state: { importId: record.id } })}
+                    className="flex-1 h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold
+                               hover:bg-primary/90 transition-colors"
+                  >
+                    Record Visit
+                  </button>
+                  <button
+                    onClick={() => navigate(`/intelligence/${record.id}/edit`)}
+                    className="flex-1 h-9 rounded-lg bg-muted text-muted-foreground text-xs font-medium
+                               hover:text-foreground hover:bg-muted/80 transition-colors"
+                  >
+                    Edit
+                  </button>
                 </div>
               </div>
             </div>

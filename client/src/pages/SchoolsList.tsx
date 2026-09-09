@@ -7,6 +7,7 @@ interface Contact {
   name: string;
   role: string;
   phone: string;
+  notes: string | null;
   isPrimary: boolean;
 }
 
@@ -14,6 +15,8 @@ interface School {
   id: string;
   name: string;
   notes: string | null;
+  followUpDate: string | null;
+  status: string;
   createdAt: string;
   contacts: Contact[];
 }
@@ -81,9 +84,14 @@ export default function SchoolsList() {
                 <Users className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
                 <span className="text-xs text-muted-foreground truncate">
                   {school.contacts.length} contact{school.contacts.length !== 1 ? 's' : ''}
-                  {primaryContact && ` · ${primaryContact.name}`}
+                  {primaryContact && ` - ${primaryContact.name}`}
                 </span>
               </div>
+              {school.followUpDate && (
+                <p className="text-xs text-amber-700 mt-1">
+                  Follow-up {new Date(school.followUpDate).toLocaleDateString('en-GB')}
+                </p>
+              )}
             </div>
             <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
           </button>

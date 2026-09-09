@@ -8,7 +8,16 @@ export class ContactsService {
   constructor(private prisma: PrismaService) {}
 
   create(createContactDto: CreateContactDto) {
-    return this.prisma.contact.create({ data: createContactDto as any });
+    return this.prisma.$transaction(async (tx) => {
+      if (createContactDto.isPrimary) {
+        await tx.contact.updateMany({
+          where: { schoolId: createContactDto.schoolId },
+          data: { isPrimary: false },
+        });
+      }
+
+      return tx.contact.create({ data: createContactDto as any });
+    });
   }
 
   findAll() {
@@ -24,9 +33,24 @@ export class ContactsService {
   }
 
   update(id: string, updateContactDto: UpdateContactDto) {
-    return this.prisma.contact.update({
-      where: { id },
-      data: updateContactDto as any,
+    return this.prisma.$transaction(async (tx) => {
+      if (updateContactDto.isPrimary) {
+        const existing = await tx.contact.findUniqueOrThrow({
+          where: { id },
+          select: { schoolId: true },
+        });
+        const schoolId = updateContactDto.schoolId ?? existing.schoolId;
+
+        await tx.contact.updateMany({
+          where: { schoolId, NOT: { id } },
+          data: { isPrimary: false },
+        });
+      }
+
+      return tx.contact.update({
+        where: { id },
+        data: updateContactDto as any,
+      });
     });
   }
 

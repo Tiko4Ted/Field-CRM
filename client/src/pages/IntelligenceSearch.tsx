@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, MapPin, X } from 'lucide-react';
 
 interface Intelligence {
@@ -15,20 +16,15 @@ interface Intelligence {
 const API = 'http://localhost:3000';
 
 export default function IntelligenceSearch() {
+  const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const search = query.trim();
 
   const { data: records = [] } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryKey: ['intelligence', 'search', search],
+    queryFn: () => fetch(`${API}/intelligence?search=${encodeURIComponent(search)}`).then(r => r.json()),
+    enabled: search.length > 0,
   });
-
-  const filtered = query.trim()
-    ? records.filter(r =>
-        r.name.toLowerCase().includes(query.toLowerCase()) ||
-        r.location.toLowerCase().includes(query.toLowerCase()) ||
-        r.intell.toLowerCase().includes(query.toLowerCase())
-      )
-    : [];
 
   return (
     <div className="space-y-4">
@@ -38,7 +34,7 @@ export default function IntelligenceSearch() {
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by name, location, details…"
+          placeholder="Search by name, location, details..."
           autoFocus
           className="w-full h-12 pl-11 pr-10 rounded-xl border border-border bg-card text-foreground text-sm
                      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
@@ -54,21 +50,26 @@ export default function IntelligenceSearch() {
         )}
       </div>
 
-      {!query.trim() && (
+      {!search && (
         <p className="text-sm text-muted-foreground text-center py-10">
           Type to search your intelligence records.
         </p>
       )}
 
-      {query.trim() && filtered.length === 0 && (
+      {search && records.length === 0 && (
         <p className="text-sm text-muted-foreground text-center py-10">
           No records found for "{query}".
         </p>
       )}
 
       <div className="space-y-3">
-        {filtered.map((record) => (
-          <div key={record.id} className="w-full p-4 rounded-2xl bg-card border border-border text-left relative">
+        {records.map((record) => (
+          <button
+            key={record.id}
+            onClick={() => navigate(`/intelligence/${record.id}`)}
+            className="w-full p-4 rounded-2xl bg-card border border-border text-left relative
+                       hover:border-primary/30 hover:shadow-sm transition-all"
+          >
             <h3 className="text-base font-semibold text-foreground pr-16">{record.name}</h3>
             <p className="text-sm text-foreground mt-2 line-clamp-2">{record.intell}</p>
             <div className="mt-3 flex items-center gap-3">
@@ -77,7 +78,7 @@ export default function IntelligenceSearch() {
                 <span className="truncate max-w-[120px]">{record.location}</span>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
     </div>

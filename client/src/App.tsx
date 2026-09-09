@@ -9,9 +9,13 @@ import SchoolDetails from './pages/SchoolDetails';
 
 import IntelligenceLayout from './pages/IntelligenceLayout';
 import IntelligenceCreate from './pages/IntelligenceCreate';
+import IntelligenceEdit from './pages/IntelligenceEdit';
 import IntelligenceList from './pages/IntelligenceList';
 import IntelligenceSearch from './pages/IntelligenceSearch';
 import IntelligenceSchedule from './pages/IntelligenceSchedule';
+import IntelligenceVisited from './pages/IntelligenceVisited';
+import IntelligenceBooked from './pages/IntelligenceBooked';
+import IntelligenceDetails from './pages/IntelligenceDetails';
 
 const queryClient = new QueryClient();
 
@@ -32,6 +36,10 @@ function App() {
             <Route path="new" element={<IntelligenceCreate />} />
             <Route path="search" element={<IntelligenceSearch />} />
             <Route path="schedule" element={<IntelligenceSchedule />} />
+            <Route path="visited" element={<IntelligenceVisited />} />
+            <Route path="booked" element={<IntelligenceBooked />} />
+            <Route path=":id/edit" element={<IntelligenceEdit />} />
+            <Route path=":id" element={<IntelligenceDetails />} />
           </Route>
         </Routes>
       </BrowserRouter>

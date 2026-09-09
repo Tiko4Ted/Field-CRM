@@ -1,17 +1,21 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Loader2, CheckCircle2, Plus, Trash2, Import } from 'lucide-react';
+import { Loader2, CheckCircle2, Plus, Trash2, Import, Clock } from 'lucide-react';
 
 const API = 'http://localhost:3000';
 
 interface Intelligence {
   id: string;
   name: string;
+  source: string;
   intell: string;
+  bestTimeToVisit: string;
+  location: string;
+  plannedVisitDate: string | null;
   status: string;
 }
 
@@ -19,12 +23,16 @@ const contactSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   role: z.string().min(1, 'Role is required'),
   phone: z.string().min(1, 'Phone is required'),
+  notes: z.string().optional(),
   isPrimary: z.boolean(),
 });
 
 const schoolSchema = z.object({
   name: z.string().min(1, 'School name is required'),
   notes: z.string().optional(),
+  followUpDate: z.string().optional(),
+  followUpNotes: z.string().optional(),
+  status: z.string().optional(),
 });
 
 type SchoolForm = z.infer<typeof schoolSchema>;
@@ -32,11 +40,12 @@ type ContactForm = z.infer<typeof contactSchema>;
 
 export default function SchoolsCreate() {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const [contacts, setContacts] = useState<ContactForm[]>([]);
   const [showContactForm, setShowContactForm] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [selectedIntellId, setSelectedIntellId] = useState<string | null>(null);
+  const [selectedIntellId, setSelectedIntellId] = useState<string | null>(location.state?.importId || null);
 
   // Fetch PLANNED intelligence records for importing
   const { data: intellRecords = [] } = useQuery<Intelligence[]>({
@@ -47,13 +56,28 @@ export default function SchoolsCreate() {
 
   const schoolForm = useForm<SchoolForm>({
     resolver: zodResolver(schoolSchema),
-    defaultValues: { name: '', notes: '' },
+    defaultValues: { name: '', notes: '', followUpDate: '', followUpNotes: '', status: 'VISITED' },
   });
 
   const contactForm = useForm<ContactForm>({
     resolver: zodResolver(contactSchema),
-    defaultValues: { name: '', role: '', phone: '', isPrimary: false },
+    defaultValues: { name: '', role: '', phone: '', notes: '', isPrimary: false },
   });
+
+  // Auto-fill if we navigated with an importId
+  useEffect(() => {
+    if (selectedIntellId && plannedIntell.length > 0) {
+      const record = plannedIntell.find(r => r.id === selectedIntellId);
+      if (record) {
+        schoolForm.setValue('name', record.name);
+        schoolForm.setValue('notes', record.intell || '');
+        schoolForm.setValue(
+          'followUpNotes',
+          `Source: ${record.source}. Best time to visit: ${record.bestTimeToVisit}. Location: ${record.location}.`,
+        );
+      }
+    }
+  }, [plannedIntell, selectedIntellId, schoolForm]);
 
   const handleImportIntell = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const id = e.target.value;
@@ -63,19 +87,27 @@ export default function SchoolsCreate() {
       const record = plannedIntell.find(r => r.id === id);
       if (record) {
         schoolForm.setValue('name', record.name);
-        schoolForm.setValue('notes', record.intell);
+        schoolForm.setValue('notes', record.intell || '');
+        schoolForm.setValue(
+          'followUpNotes',
+          `Source: ${record.source}. Best time to visit: ${record.bestTimeToVisit}. Location: ${record.location}.`,
+        );
       }
     } else {
-      schoolForm.reset({ name: '', notes: '' });
+      schoolForm.reset({ name: '', notes: '', followUpDate: '', followUpNotes: '', status: 'VISITED' });
     }
   };
 
   const createSchool = useMutation({
     mutationFn: async (data: SchoolForm) => {
+      const payload = {
+        ...data,
+        followUpDate: data.followUpDate ? new Date(data.followUpDate).toISOString() : null,
+      };
       const res = await fetch(`${API}/schools`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+        body: JSON.stringify(payload),
       });
       const school = await res.json();
       
@@ -124,7 +156,7 @@ export default function SchoolsCreate() {
           <CheckCircle2 className="w-8 h-8 text-green-600" />
         </div>
         <h3 className="text-lg font-semibold text-foreground">School added!</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Redirecting to list…</p>
+        <p className="mt-1 text-sm text-muted-foreground">Redirecting to list...</p>
       </div>
     );
   }
@@ -195,6 +227,46 @@ export default function SchoolsCreate() {
                        transition-all"
           />
         </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Follow-up Date</label>
+            <input
+              type="date"
+              {...schoolForm.register('followUpDate')}
+              className="w-full h-11 px-4 rounded-xl border border-border bg-card text-foreground text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                         transition-all"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-1.5">Status</label>
+            <select
+              {...schoolForm.register('status')}
+              className="w-full h-11 px-4 rounded-xl border border-border bg-card text-foreground text-sm
+                         focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                         transition-all"
+            >
+              <option value="VISITED">Visited</option>
+              <option value="FOLLOW_UP">Follow-up</option>
+              <option value="BOOKED">Booked</option>
+              <option value="CANCELLED">Cancelled</option>
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-foreground mb-1.5">Follow-up Notes</label>
+          <textarea
+            {...schoolForm.register('followUpNotes')}
+            rows={2}
+            placeholder="Next action, promised callback, requirements, etc."
+            className="w-full px-4 py-3 rounded-xl border border-border bg-card text-foreground text-sm
+                       placeholder:text-muted-foreground resize-none
+                       focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
+                       transition-all"
+          />
+        </div>
       </form>
 
       {/* Contacts Section */}
@@ -236,7 +308,10 @@ export default function SchoolsCreate() {
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground truncate">{contact.role} · {contact.phone}</p>
+                <p className="text-xs text-muted-foreground truncate">{contact.role} - {contact.phone}</p>
+                {contact.notes && (
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{contact.notes}</p>
+                )}
               </div>
               <button
                 type="button"
@@ -285,6 +360,17 @@ export default function SchoolsCreate() {
                            focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-foreground mb-1">Notes</label>
+              <textarea
+                {...contactForm.register('notes')}
+                rows={2}
+                placeholder="Response, relationship, preferred follow-up, etc."
+                className="w-full px-3 py-2 rounded-lg border border-border bg-card text-sm text-foreground
+                           placeholder:text-muted-foreground resize-none
+                           focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
+              />
+            </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -316,23 +402,29 @@ export default function SchoolsCreate() {
       </div>
 
       {/* Submit */}
-      <button
-        type="submit"
-        form="school-form"
-        disabled={createSchool.isPending}
-        className="w-full h-12 bg-primary text-primary-foreground text-sm font-semibold rounded-xl
-                   hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed
-                   transition-colors shadow-md shadow-primary/20 flex items-center justify-center gap-2"
-      >
-        {createSchool.isPending ? (
-          <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Saving…
-          </>
-        ) : (
-          'Save School'
-        )}
-      </button>
+      <div className="pt-2">
+        <p className="text-xs text-center text-muted-foreground mb-3 flex items-center justify-center gap-1.5">
+          <Clock className="w-3.5 h-3.5" />
+          Visit date and time will be automatically recorded as today.
+        </p>
+        <button
+          type="submit"
+          form="school-form"
+          disabled={createSchool.isPending}
+          className="w-full h-12 bg-primary text-primary-foreground text-sm font-semibold rounded-xl
+                     hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed
+                     transition-colors shadow-md shadow-primary/20 flex items-center justify-center gap-2"
+        >
+          {createSchool.isPending ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save School'
+          )}
+        </button>
+      </div>
     </div>
   );
 }

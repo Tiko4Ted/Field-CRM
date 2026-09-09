@@ -7,14 +7,121 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CampaignRole {
+  OWNER
+  MEMBER
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum CampaignMemberStatus {
+  ACTIVE
+  REMOVED
+  LEFT
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum IntelligenceReviewStatus {
+  PENDING_REVIEW
+  ACCEPTED
+  FLAGGED
+  REJECTED
+}
+
+model User {
+  id           String @id @default(uuid())
+  email        String @unique
+  passwordHash String
+  name         String
+  
+  ownedCampaigns    Campaign[]            @relation("CampaignOwner")
+  memberships       CampaignMember[]
+  sentInvitations   CampaignInvitation[]  @relation("InvitationSender")
+  recordedIntel     Intelligence[]        @relation("IntelRecorder")
+  reviewedIntel     Intelligence[]        @relation("IntelReviewer")
+  intelligenceFlags IntelligenceFlag[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Campaign {
+  id          String         @id @default(uuid())
+  name        String
+  description String
+  status      CampaignStatus @default(ACTIVE)
+  startDate   DateTime       @default(now())
+  endDate     DateTime?
+  
+  ownerId     String
+  owner       User           @relation("CampaignOwner", fields: [ownerId], references: [id])
+  
+  members      CampaignMember[]
+  invitations  CampaignInvitation[]
+  intelligence Intelligence[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CampaignMember {
+  id         String               @id @default(uuid())
+  campaignId String
+  userId     String
+  role       CampaignRole
+  status     CampaignMemberStatus @default(ACTIVE)
+  
+  campaign   Campaign @relation(fields: [campaignId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
+  
+  joinedAt   DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([campaignId, userId])
+}
+
+model CampaignInvitation {
+  id         String           @id @default(uuid())
+  campaignId String
+  email      String
+  invitedById String
+  status     InvitationStatus @default(PENDING)
+  token      String           @unique
+  
+  campaign   Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  invitedBy  User     @relation("InvitationSender", fields: [invitedById], references: [id])
+  
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  acceptedAt DateTime?
+}
+
 model School {
-  id        String    @id @default(uuid())
-  name      String
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  contacts  Contact[]
-  intelligence Intelligence?
+  id            String        @id @default(uuid())
+  name          String
+  notes         String?
+  visitedAt     DateTime      @default(now())
+  followUpDate  DateTime?
+  followUpNotes String?
+  status        String        @default("VISITED")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  contacts      Contact[]
+  intelligence  Intelligence?
 }
 
 model Contact {
@@ -22,6 +129,7 @@ model Contact {
   name      String
   role      String
   phone     String
+  notes     String?
   isPrimary Boolean  @default(false)
   schoolId  String
   school    School   @relation(fields: [schoolId], references: [id], onDelete: Cascade)
@@ -40,9 +148,41 @@ model Intelligence {
   schoolType        String?   // Private, Public
   hasSystem         String?   // Yes, No, Unknown
   plannedVisitDate  DateTime?
-  status            String    @default("PLANNED") // PLANNED, VISITED, CANCELLED
+  bookedDate        DateTime?
+  status            String    @default("PLANNED") // PLANNED, VISITED, BOOKED, CANCELLED
+  
   schoolId          String?   @unique
   school            School?   @relation(fields: [schoolId], references: [id])
+  
+  // Campaign & Ownership Additions
+  campaignId        String?
+  campaign          Campaign? @relation(fields: [campaignId], references: [id])
+  
+  recordedById      String
+  recordedBy        User      @relation("IntelRecorder", fields: [recordedById], references: [id])
+  
+  reviewStatus      IntelligenceReviewStatus @default(PENDING_REVIEW)
+  reviewedById      String?
+  reviewedBy        User?     @relation("IntelReviewer", fields: [reviewedById], references: [id])
+  reviewedAt        DateTime?
+  reviewNote        String?
+  
+  flags             IntelligenceFlag[]
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
+}
+
+model IntelligenceFlag {
+  id             String       @id @default(uuid())
+  intelligenceId String
+  flaggedById    String
+  reason         String
+  note           String?
+  
+  intelligence   Intelligence @relation(fields: [intelligenceId], references: [id], onDelete: Cascade)
+  flaggedBy      User         @relation(fields: [flaggedById], references: [id])
+
+  createdAt      DateTime     @default(now())
+  resolvedAt     DateTime?
 }

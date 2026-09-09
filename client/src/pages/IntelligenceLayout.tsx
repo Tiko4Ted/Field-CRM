@@ -1,11 +1,13 @@
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, List, PlusCircle, Search, Calendar } from 'lucide-react';
+import { ArrowLeft, List, PlusCircle, Search, Calendar, CheckCircle, Bookmark } from 'lucide-react';
 
 const navItems = [
   { path: '/intelligence', label: 'List', icon: List },
   { path: '/intelligence/new', label: 'New Record', icon: PlusCircle },
   { path: '/intelligence/search', label: 'Search', icon: Search },
   { path: '/intelligence/schedule', label: 'Schedule', icon: Calendar },
+  { path: '/intelligence/visited', label: 'Visited', icon: CheckCircle },
+  { path: '/intelligence/booked', label: 'Booked', icon: Bookmark },
 ];
 
 export default function IntelligenceLayout() {
@@ -67,7 +69,7 @@ export default function IntelligenceLayout() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-20
                       bg-card/90 backdrop-blur-lg border-t border-border
                       safe-area-inset-bottom">
-        <div className="flex items-center justify-around h-16 px-2">
+        <div className="flex items-center justify-start overflow-x-auto hide-scrollbar h-16 px-2 gap-4">
           {navItems.map((item) => {
             const active = isActive(item.path);
             return (

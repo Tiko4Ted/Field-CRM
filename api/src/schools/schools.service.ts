@@ -8,11 +8,40 @@ export class SchoolsService {
   constructor(private prisma: PrismaService) {}
 
   create(createSchoolDto: CreateSchoolDto) {
-    return this.prisma.school.create({ data: createSchoolDto as any });
+    return this.prisma.school.create({
+      data: {
+        ...createSchoolDto,
+        visitedAt: createSchoolDto.visitedAt ? new Date(createSchoolDto.visitedAt) : undefined,
+        followUpDate: createSchoolDto.followUpDate ? new Date(createSchoolDto.followUpDate) : undefined,
+      } as any,
+    });
   }
 
-  findAll() {
+  findAll(search?: string) {
+    const normalizedSearch = search?.trim();
+
     return this.prisma.school.findMany({
+      where: normalizedSearch
+        ? {
+            OR: [
+              { name: { contains: normalizedSearch, mode: 'insensitive' } },
+              { notes: { contains: normalizedSearch, mode: 'insensitive' } },
+              { followUpNotes: { contains: normalizedSearch, mode: 'insensitive' } },
+              {
+                contacts: {
+                  some: {
+                    OR: [
+                      { name: { contains: normalizedSearch, mode: 'insensitive' } },
+                      { role: { contains: normalizedSearch, mode: 'insensitive' } },
+                      { phone: { contains: normalizedSearch, mode: 'insensitive' } },
+                      { notes: { contains: normalizedSearch, mode: 'insensitive' } },
+                    ],
+                  },
+                },
+              },
+            ],
+          }
+        : undefined,
       include: { contacts: true },
       orderBy: { createdAt: 'desc' },
     });
@@ -28,7 +57,11 @@ export class SchoolsService {
   update(id: string, updateSchoolDto: UpdateSchoolDto) {
     return this.prisma.school.update({
       where: { id },
-      data: updateSchoolDto as any,
+      data: {
+        ...updateSchoolDto,
+        visitedAt: updateSchoolDto.visitedAt ? new Date(updateSchoolDto.visitedAt) : undefined,
+        followUpDate: updateSchoolDto.followUpDate ? new Date(updateSchoolDto.followUpDate) : undefined,
+      } as any,
     });
   }
 
