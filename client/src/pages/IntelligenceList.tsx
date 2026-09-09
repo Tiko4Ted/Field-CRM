@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Brain, MapPin, Calendar, Loader2 } from 'lucide-react';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 interface Intelligence {
   id: string;
@@ -13,28 +15,23 @@ interface Intelligence {
   plannedVisitDate: string | null;
 }
 
-const API = 'http://localhost:3000';
-
 export default function IntelligenceList() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { campaignId } = useCampaign();
 
   const { data: records = [], isLoading } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryKey: ['intelligence', { campaignId }],
+    queryFn: () => api.get('/intelligence', { params: campaignId ? { campaignId } : {} }).then(r => r.data),
   });
 
   const scheduleMutation = useMutation({
     mutationFn: async ({ id, date }: { id: string; date: string }) => {
-      const res = await fetch(`${API}/intelligence/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plannedVisitDate: new Date(date).toISOString() }),
-      });
-      return res.json();
+      const { data } = await api.patch(`/intelligence/${id}`, { plannedVisitDate: new Date(date).toISOString() });
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['intelligence'] });
+      queryClient.invalidateQueries({ queryKey: ['intelligence', { campaignId }] });
     },
   });
 
@@ -127,7 +124,7 @@ export default function IntelligenceList() {
                   )}
                   
                   <button
-                    onClick={() => navigate(`/schools/new`, { state: { importId: record.id } })}
+                    onClick={() => navigate(campaignId ? `/campaigns/${campaignId}/schools/new` : '/schools/new', { state: { importId: record.id } })}
                     className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 
                                text-xs font-semibold transition-colors"
                   >
@@ -137,7 +134,7 @@ export default function IntelligenceList() {
               )}
               
               <button
-                onClick={() => navigate(`/intelligence/${record.id}`)}
+                onClick={() => navigate(campaignId ? `/campaigns/${campaignId}/intelligence/${record.id}` : `/intelligence/${record.id}`)}
                 className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80
                            hover:text-foreground text-xs font-medium transition-colors"
               >
@@ -145,7 +142,7 @@ export default function IntelligenceList() {
               </button>
 
               <button
-                onClick={() => navigate(`/intelligence/${record.id}/edit`)}
+                onClick={() => navigate(campaignId ? `/campaigns/${campaignId}/intelligence/${record.id}/edit` : `/intelligence/${record.id}/edit`)}
                 className="px-3 py-1.5 rounded-lg bg-muted text-muted-foreground hover:bg-muted/80
                            hover:text-foreground text-xs font-medium transition-colors"
               >

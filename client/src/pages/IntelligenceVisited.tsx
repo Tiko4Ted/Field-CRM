@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { MapPin, Loader2, CheckCircle2, Bookmark } from 'lucide-react';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 interface Intelligence {
   id: string;
@@ -12,33 +14,26 @@ interface Intelligence {
   status: string;
 }
 
-const API = 'http://localhost:3000';
 
 export default function IntelligenceVisited() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { campaignId } = useCampaign();
 
   const { data: allRecords = [], isLoading } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryKey: ['intelligence', { campaignId }],
+    queryFn: () => api.get('/intelligence', { params: campaignId ? { campaignId } : {} }).then(r => r.data),
   });
 
   const records = allRecords.filter(r => r.status === 'VISITED');
 
   const bookMutation = useMutation({
     mutationFn: async ({ id, date }: { id: string; date: string }) => {
-      const res = await fetch(`${API}/intelligence/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          status: 'BOOKED',
-          bookedDate: new Date(date).toISOString() 
-        }),
-      });
-      return res.json();
+      const { data } = await api.patch(`/intelligence/${id}`, { status: 'BOOKED', bookedDate: new Date(date).toISOString() });
+      return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['intelligence'] });
+      queryClient.invalidateQueries({ queryKey: ['intelligence', { campaignId }] });
     },
   });
 

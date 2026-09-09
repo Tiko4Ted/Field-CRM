@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, CheckCircle2, ArrowLeft, Clock } from 'lucide-react';
+import api from '../lib/api';
 
-const API = 'http://localhost:3000';
 
 const intellSchema = z.object({
   name: z.string().min(1, 'School name is required'),
@@ -30,7 +30,7 @@ export default function IntelligenceEdit() {
 
   const { data: record, isLoading } = useQuery({
     queryKey: ['intelligence', id],
-    queryFn: () => fetch(`${API}/intelligence/${id}`).then(r => r.json()),
+    queryFn: () => api.get(`/intelligence/${id}`).then(r => r.data),
   });
 
   const form = useForm<IntellForm>({
@@ -68,7 +68,7 @@ export default function IntelligenceEdit() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      return res.json();
+      return res.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['intelligence'] });

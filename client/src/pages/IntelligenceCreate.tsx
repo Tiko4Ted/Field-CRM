@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, CheckCircle2, Clock } from 'lucide-react';
-
-const API = 'http://localhost:3000';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 const intellSchema = z.object({
   name: z.string().min(1, 'School name is required'),
@@ -25,6 +25,7 @@ type IntellForm = z.infer<typeof intellSchema>;
 export default function IntelligenceCreate() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { campaignId } = useCampaign();
   const [success, setSuccess] = useState(false);
 
   const form = useForm<IntellForm>({
@@ -39,19 +40,16 @@ export default function IntelligenceCreate() {
     mutationFn: async (data: IntellForm) => {
       const payload = {
         ...data,
+        ...(campaignId ? { campaignId } : {}),
         plannedVisitDate: data.plannedVisitDate ? new Date(data.plannedVisitDate).toISOString() : null
       };
-      const res = await fetch(`${API}/intelligence`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      return res.json();
+      const { data: result } = await api.post('/intelligence', payload);
+      return result;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['intelligence'] });
+      queryClient.invalidateQueries({ queryKey: ['intelligence', { campaignId }] });
       setSuccess(true);
-      setTimeout(() => navigate('/intelligence'), 1200);
+      setTimeout(() => navigate(campaignId ? `/campaigns/${campaignId}/intelligence` : '/intelligence'), 1200);
     },
   });
 

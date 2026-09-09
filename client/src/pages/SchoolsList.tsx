@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, Users, MapPin } from 'lucide-react';
+import api from '../lib/api';
 
 interface Contact {
   id: string;
@@ -21,14 +22,13 @@ interface School {
   contacts: Contact[];
 }
 
-const API = 'http://localhost:3000';
 
 export default function SchoolsList() {
   const navigate = useNavigate();
 
   const { data: schools = [], isLoading } = useQuery<School[]>({
     queryKey: ['schools'],
-    queryFn: () => fetch(`${API}/schools`).then(r => r.json()),
+    queryFn: () => api.get(`/schools`).then(r => r.data),
   });
 
   if (isLoading) {

@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Loader2, CheckCircle2, Plus, Trash2, Import, Clock } from 'lucide-react';
+import api from '../lib/api';
 
-const API = 'http://localhost:3000';
 
 interface Intelligence {
   id: string;
@@ -50,7 +50,7 @@ export default function SchoolsCreate() {
   // Fetch PLANNED intelligence records for importing
   const { data: intellRecords = [] } = useQuery<Intelligence[]>({
     queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryFn: () => api.get(`/intelligence`).then(r => r.data),
   });
   const plannedIntell = intellRecords.filter(r => r.status === 'PLANNED');
 
@@ -109,7 +109,7 @@ export default function SchoolsCreate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      const school = await res.json();
+      const school = res.data;
       
       // If imported from intelligence, update intelligence status and link school
       if (selectedIntellId) {

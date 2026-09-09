@@ -33,20 +33,21 @@ export class CampaignsService {
 
   // Get campaigns where the user is an active member
   async getMyCampaigns(userId: string) {
-    return this.prisma.campaign.findMany({
+    return this.prisma.campaignMember.findMany({
       where: {
-        members: {
-          some: {
-            userId,
-            status: CampaignMemberStatus.ACTIVE,
+        userId,
+        status: CampaignMemberStatus.ACTIVE,
+      },
+      include: {
+        campaign: {
+          include: {
+            _count: {
+              select: { members: true, intelligence: true },
+            },
           },
         },
       },
-      include: {
-        _count: {
-          select: { members: true, intelligence: true },
-        },
-      },
+      orderBy: { joinedAt: 'desc' },
     });
   }
 
@@ -56,6 +57,16 @@ export class CampaignsService {
       include: {
         owner: {
           select: { id: true, name: true, email: true },
+        },
+        members: {
+          where: { status: CampaignMemberStatus.ACTIVE },
+          include: {
+            user: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { joinedAt: 'asc' },
+        },
+        invitations: {
+          orderBy: { createdAt: 'desc' },
         },
       },
     });

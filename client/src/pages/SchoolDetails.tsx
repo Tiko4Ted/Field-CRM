@@ -4,9 +4,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ArrowLeft, Phone, Star, Plus, Trash2, Loader2, Edit2, Check, X } from 'lucide-react';
+import { ArrowLeft, Phone, Star, Plus, Trash2, Loader2, Edit2 } from 'lucide-react';
+import api from '../lib/api';
 
-const API = 'http://localhost:3000';
 
 interface Contact {
   id: string;
@@ -79,7 +79,7 @@ export default function SchoolDetails() {
 
   const { data: school, isLoading } = useQuery<School>({
     queryKey: ['school', id],
-    queryFn: () => fetch(`${API}/schools/${id}`).then(r => r.json()),
+    queryFn: () => api.get(`/schools/${id}`).then(r => r.data),
   });
 
   const schoolForm = useForm<SchoolFormData>({
@@ -143,7 +143,7 @@ export default function SchoolDetails() {
 
   const deleteContactMutation = useMutation({
     mutationFn: (contactId: string) =>
-      fetch(`${API}/contacts/${contactId}`, { method: 'DELETE' }),
+      api.delete(`/contacts/${contactId}`),
     onSuccess: invalidateSchool,
   });
 
@@ -165,7 +165,7 @@ export default function SchoolDetails() {
 
   const deleteSchoolMutation = useMutation({
     mutationFn: () =>
-      fetch(`${API}/schools/${id}`, { method: 'DELETE' }),
+      api.delete(`/schools/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['schools'] });
       navigate('/schools');

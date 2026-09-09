@@ -3,23 +3,30 @@ import { CampaignsService } from './campaigns.service.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { CampaignRoleGuard, RequireCampaignRoles } from './campaign-role.guard.js';
 
+interface AuthenticatedRequest {
+  user: {
+    id: string;
+    email: string;
+  };
+}
+
 @Controller('campaigns')
 @UseGuards(JwtAuthGuard)
 export class CampaignsController {
   constructor(private readonly campaignsService: CampaignsService) {}
 
   @Post()
-  createCampaign(@Req() req, @Body() body: { name: string; description: string }) {
+  createCampaign(@Req() req: AuthenticatedRequest, @Body() body: { name: string; description: string }) {
     return this.campaignsService.createCampaign(req.user.id, body);
   }
 
   @Get()
-  getMyCampaigns(@Req() req) {
+  getMyCampaigns(@Req() req: AuthenticatedRequest) {
     return this.campaignsService.getMyCampaigns(req.user.id);
   }
 
   @Post('invitations/accept')
-  acceptInvitation(@Req() req, @Body() body: { token: string }) {
+  acceptInvitation(@Req() req: AuthenticatedRequest, @Body() body: { token: string }) {
     return this.campaignsService.acceptInvitation(req.user.id, req.user.email, body.token);
   }
 
@@ -41,7 +48,7 @@ export class CampaignsController {
   @Post(':campaignId/invitations')
   @UseGuards(CampaignRoleGuard)
   @RequireCampaignRoles('OWNER')
-  inviteMember(@Req() req, @Param('campaignId') campaignId: string, @Body() body: { email: string }) {
+  inviteMember(@Req() req: AuthenticatedRequest, @Param('campaignId') campaignId: string, @Body() body: { email: string }) {
     return this.campaignsService.inviteMember(campaignId, req.user.id, body.email);
   }
 
@@ -54,7 +61,7 @@ export class CampaignsController {
 
   @Post(':campaignId/leave')
   @UseGuards(CampaignRoleGuard)
-  leaveCampaign(@Req() req, @Param('campaignId') campaignId: string) {
+  leaveCampaign(@Req() req: AuthenticatedRequest, @Param('campaignId') campaignId: string) {
     return this.campaignsService.leaveCampaign(campaignId, req.user.id);
   }
 }

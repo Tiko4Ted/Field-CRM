@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { MapPin, Bookmark } from 'lucide-react';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 interface Intelligence {
   id: string;
@@ -13,14 +15,13 @@ interface Intelligence {
   bookedDate: string | null;
 }
 
-const API = 'http://localhost:3000';
-
 export default function IntelligenceBooked() {
   const navigate = useNavigate();
+  const { campaignId } = useCampaign();
 
   const { data: allRecords = [], isLoading } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryKey: ['intelligence', { campaignId }],
+    queryFn: () => api.get('/intelligence', { params: campaignId ? { campaignId } : {} }).then(r => r.data),
   });
 
   const records = allRecords.filter(r => r.status === 'BOOKED');

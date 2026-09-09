@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, MapPin, X } from 'lucide-react';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 interface Intelligence {
   id: string;
@@ -13,16 +15,17 @@ interface Intelligence {
   status: string;
 }
 
-const API = 'http://localhost:3000';
-
 export default function IntelligenceSearch() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
+  const { campaignId } = useCampaign();
   const search = query.trim();
 
   const { data: records = [] } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence', 'search', search],
-    queryFn: () => fetch(`${API}/intelligence?search=${encodeURIComponent(search)}`).then(r => r.json()),
+    queryKey: ['intelligence', 'search', search, { campaignId }],
+    queryFn: () => api.get('/intelligence', { 
+      params: { search, ...(campaignId ? { campaignId } : {}) } 
+    }).then(r => r.data),
     enabled: search.length > 0,
   });
 

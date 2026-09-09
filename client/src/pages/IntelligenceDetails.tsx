@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Bookmark, Calendar, CheckCircle2, Edit2, Loader2, MapPin, Trash2 } from 'lucide-react';
+import api from '../lib/api';
 
-const API = 'http://localhost:3000';
 
 interface Intelligence {
   id: string;
@@ -46,11 +46,11 @@ export default function IntelligenceDetails() {
 
   const { data: record, isLoading } = useQuery<Intelligence>({
     queryKey: ['intelligence', id],
-    queryFn: () => fetch(`${API}/intelligence/${id}`).then(r => r.json()),
+    queryFn: () => api.get(`/intelligence/${id}`).then(r => r.data),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => fetch(`${API}/intelligence/${id}`, { method: 'DELETE' }),
+    mutationFn: () => api.delete(`/intelligence/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['intelligence'] });
       navigate('/intelligence');

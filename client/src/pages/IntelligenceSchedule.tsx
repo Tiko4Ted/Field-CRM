@@ -1,6 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Calendar, MapPin, Clock } from 'lucide-react';
+import api from '../lib/api';
+import { useCampaign } from '../lib/CampaignContext';
 
 interface Intelligence {
   id: string;
@@ -11,13 +13,13 @@ interface Intelligence {
   status: string;
 }
 
-const API = 'http://localhost:3000';
-
 export default function IntelligenceSchedule() {
   const navigate = useNavigate();
+  const { campaignId } = useCampaign();
+  
   const { data: records = [], isLoading } = useQuery<Intelligence[]>({
-    queryKey: ['intelligence'],
-    queryFn: () => fetch(`${API}/intelligence`).then(r => r.json()),
+    queryKey: ['intelligence', { campaignId }],
+    queryFn: () => api.get('/intelligence', { params: campaignId ? { campaignId } : {} }).then(r => r.data),
   });
 
   const planned = records

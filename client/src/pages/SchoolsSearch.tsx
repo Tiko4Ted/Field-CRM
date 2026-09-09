@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { Search as SearchIcon, ChevronRight, Users, X } from 'lucide-react';
+import api from '../lib/api';
 
 interface Contact {
   id: string;
@@ -21,7 +22,6 @@ interface School {
   contacts: Contact[];
 }
 
-const API = 'http://localhost:3000';
 
 export default function SchoolsSearch() {
   const navigate = useNavigate();
@@ -30,7 +30,7 @@ export default function SchoolsSearch() {
 
   const { data: schools = [] } = useQuery<School[]>({
     queryKey: ['schools', 'search', search],
-    queryFn: () => fetch(`${API}/schools?search=${encodeURIComponent(search)}`).then(r => r.json()),
+    queryFn: () => api.get(`/schools?search=${encodeURIComponent(search)}`).then(r => r.data),
     enabled: search.length > 0,
   });
 
