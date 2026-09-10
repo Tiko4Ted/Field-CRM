@@ -103,7 +103,7 @@ sudo ln -sfn "/etc/nginx/sites-available/${NGINX_SITE}" "/etc/nginx/sites-enable
 sudo nginx -t
 sudo systemctl reload nginx
 
-if command -v certbot >/dev/null 2>&1 && sudo test -d "/etc/letsencrypt/live/${DOMAIN}"; then
+if command -v certbot >/dev/null 2>&1 && [ -d "/etc/letsencrypt/live/${DOMAIN}" ]; then
   log "Reinstalling existing HTTPS certificate"
   sudo certbot --nginx -d "$DOMAIN" --non-interactive --redirect --keep-until-expiring
   sudo nginx -t
