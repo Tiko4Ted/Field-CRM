@@ -2,6 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../lib/AuthContext';
+import LoadingState from '../lib/LoadingState';
+import { useSlowLoading } from '../lib/useSlowLoading';
 import { Users, Plus, Shield, ShieldAlert, LogOut, GraduationCap, Brain } from 'lucide-react';
 
 interface Campaign {
@@ -26,6 +28,7 @@ export default function CampaignsList() {
     queryKey: ['campaigns'],
     queryFn: () => api.get('/campaigns').then(r => r.data),
   });
+  const isSlow = useSlowLoading(isLoading);
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20 p-4">
@@ -101,11 +104,11 @@ export default function CampaignsList() {
         </div>
 
         {isLoading ? (
-          <div className="animate-pulse space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-32 bg-card border border-border rounded-2xl" />
-            ))}
-          </div>
+          <LoadingState
+            isSlow={isSlow}
+            title="Loading campaigns..."
+            slowDescription="Your database may be waking up. This usually only affects the first request."
+          />
         ) : memberships.length === 0 ? (
           <div className="text-center py-20 bg-card border border-border rounded-3xl mt-8 shadow-sm">
             <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

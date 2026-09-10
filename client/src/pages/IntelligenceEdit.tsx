@@ -63,11 +63,7 @@ export default function IntelligenceEdit() {
         ...data,
         plannedVisitDate: data.plannedVisitDate ? new Date(data.plannedVisitDate).toISOString() : null
       };
-      const res = await fetch(`${API}/intelligence/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.patch(`/intelligence/${id}`, payload);
       return res.data;
     },
     onSuccess: () => {

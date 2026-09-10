@@ -116,11 +116,7 @@ export default function SchoolDetails() {
 
   const addContactMutation = useMutation({
     mutationFn: (data: ContactFormData) =>
-      fetch(`${API}/contacts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, schoolId: id }),
-      }).then(r => r.json()),
+      api.post('/contacts', { ...data, schoolId: id }).then(r => r.data),
     onSuccess: () => {
       invalidateSchool();
       addContactForm.reset();
@@ -130,11 +126,7 @@ export default function SchoolDetails() {
 
   const updateContactMutation = useMutation({
     mutationFn: ({ contactId, data }: { contactId: string; data: ContactFormData }) =>
-      fetch(`${API}/contacts/${contactId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      }).then(r => r.json()),
+      api.patch(`/contacts/${contactId}`, data).then(r => r.data),
     onSuccess: () => {
       invalidateSchool();
       setEditingContactId(null);
@@ -149,14 +141,10 @@ export default function SchoolDetails() {
 
   const updateSchoolMutation = useMutation({
     mutationFn: (data: SchoolFormData) =>
-      fetch(`${API}/schools/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      api.patch(`/schools/${id}`, {
           ...data,
           followUpDate: data.followUpDate ? new Date(data.followUpDate).toISOString() : null,
-        }),
-      }).then(r => r.json()),
+        }).then(r => r.data),
     onSuccess: () => {
       invalidateSchool();
       setEditingSchool(false);

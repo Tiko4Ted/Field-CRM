@@ -27,4 +27,25 @@ api.interceptors.response.use(
   },
 );
 
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (!axios.isAxiosError(error)) {
+    return fallback;
+  }
+
+  if (!error.response) {
+    return 'Cannot reach the API server. Make sure the backend is running on http://localhost:3000.';
+  }
+
+  if ([500, 502, 503, 504].includes(error.response.status)) {
+    return 'The server or database may still be starting. Wait a moment, then try again.';
+  }
+
+  const message = error.response.data?.message;
+  if (Array.isArray(message)) {
+    return message.join(' ');
+  }
+
+  return message || fallback;
+}
+
 export default api;

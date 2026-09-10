@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext';
-import api from '../lib/api';
+import api, { getApiErrorMessage } from '../lib/api';
+import { useSlowLoading } from '../lib/useSlowLoading';
 import { Loader2 } from 'lucide-react';
 
 export default function Login() {
@@ -11,6 +12,7 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const isSlow = useSlowLoading(isLoading);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,12 +23,8 @@ export default function Login() {
       const response = await api.post('/auth/login', { email, password });
       login(response.data.access_token, response.data.user);
       navigate('/campaigns');
-    } catch (err: any) {
-      if (!err.response) {
-        setError('Cannot reach the API server. Make sure the backend is running on http://localhost:3000.');
-      } else {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
-      }
+    } catch (err: unknown) {
+      setError(getApiErrorMessage(err, 'Login failed. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -78,8 +76,20 @@ export default function Login() {
             disabled={isLoading}
             className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-semibold flex items-center justify-center hover:opacity-90 transition-opacity disabled:opacity-50 mt-6"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
+            {isLoading ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="w-5 h-5 animate-spin" />
+                {isSlow ? 'Starting database...' : 'Signing in...'}
+              </span>
+            ) : (
+              'Sign In'
+            )}
           </button>
+          {isLoading && isSlow && (
+            <p className="text-center text-xs text-muted-foreground">
+              First request after idle can take a little longer.
+            </p>
+          )}
         </form>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">

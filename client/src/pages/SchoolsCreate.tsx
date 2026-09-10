@@ -104,30 +104,18 @@ export default function SchoolsCreate() {
         ...data,
         followUpDate: data.followUpDate ? new Date(data.followUpDate).toISOString() : null,
       };
-      const res = await fetch(`${API}/schools`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.post('/schools', payload);
       const school = res.data;
       
       // If imported from intelligence, update intelligence status and link school
       if (selectedIntellId) {
-        await fetch(`${API}/intelligence/${selectedIntellId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'VISITED', schoolId: school.id }),
-        });
+        await api.patch(`/intelligence/${selectedIntellId}`, { status: 'VISITED', schoolId: school.id });
       }
       return school;
     },
     onSuccess: async (school) => {
       for (const contact of contacts) {
-        await fetch(`${API}/contacts`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...contact, schoolId: school.id }),
-        });
+        await api.post('/contacts', { ...contact, schoolId: school.id });
       }
       queryClient.invalidateQueries({ queryKey: ['schools'] });
       queryClient.invalidateQueries({ queryKey: ['intelligence'] });

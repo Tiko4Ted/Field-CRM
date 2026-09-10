@@ -59,11 +59,7 @@ export default function IntelligenceDetails() {
 
   const cancelMutation = useMutation({
     mutationFn: () =>
-      fetch(`${API}/intelligence/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'CANCELLED' }),
-      }).then(r => r.json()),
+      api.patch(`/intelligence/${id}`, { status: 'CANCELLED' }).then(r => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['intelligence'] });
       queryClient.invalidateQueries({ queryKey: ['intelligence', id] });
@@ -72,11 +68,7 @@ export default function IntelligenceDetails() {
 
   const bookMutation = useMutation({
     mutationFn: (date: string) =>
-      fetch(`${API}/intelligence/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'BOOKED', bookedDate: new Date(date).toISOString() }),
-      }).then(r => r.json()),
+      api.patch(`/intelligence/${id}`, { status: 'BOOKED', bookedDate: new Date(date).toISOString() }).then(r => r.data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['intelligence'] });
       queryClient.invalidateQueries({ queryKey: ['intelligence', id] });
