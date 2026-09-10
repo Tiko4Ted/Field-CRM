@@ -46,7 +46,24 @@ git pull --ff-only origin main
 if [ ! -f "$APP_DIR/api/.env" ]; then
   cp "$APP_DIR/api/.env.production.example" "$APP_DIR/api/.env"
   echo "Created $APP_DIR/api/.env from the example." >&2
-  echo "Edit DATABASE_URL and JWT_SECRET, then rerun this script." >&2
+  echo "Create the isolated field_crm database with deploy/scripts/setup-postgres.sh." >&2
+  echo "Then edit DATABASE_URL and JWT_SECRET, and rerun this script." >&2
+  exit 1
+fi
+
+if grep -Eq 'DATABASE_URL=.*(schoolhub|school_hub)' "$APP_DIR/api/.env"; then
+  echo "Refusing to deploy: DATABASE_URL appears to reference the existing SchoolHub database." >&2
+  echo "Use a separate field_crm database and field_crm_app user." >&2
+  exit 1
+fi
+
+if ! grep -Eq '^DATABASE_URL=.*://field_crm_app:' "$APP_DIR/api/.env"; then
+  echo "Refusing to deploy: DATABASE_URL must use the separate field_crm_app database user." >&2
+  exit 1
+fi
+
+if ! grep -Eq '^DATABASE_URL=.*/field_crm(\?|")' "$APP_DIR/api/.env"; then
+  echo "Refusing to deploy: DATABASE_URL must reference the separate field_crm database." >&2
   exit 1
 fi
 

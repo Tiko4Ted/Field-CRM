@@ -14,14 +14,19 @@ This app can run on the same VPS as `schoolhub.co.ke` under the subdomain `field
 Create an `A` record:
 
 ```text
-field.schoolhub.co.ke -> YOUR_VPS_PUBLIC_IP
+Type: A
+Host/Name: field
+Value: 102.212.246.201
+TTL: 300 or default
 ```
 
-For the current VPS from the review report:
+Wait until it resolves before running Certbot:
 
-```text
-field.schoolhub.co.ke -> 102.212.246.201
+```bash
+dig +short field.schoolhub.co.ke
 ```
+
+It should return `102.212.246.201`.
 
 ## Server Files
 
@@ -43,10 +48,19 @@ npm ci
 
 ## API Env
 
-Create `/var/www/field-crm/api/.env`:
+Use a separate PostgreSQL database and user for this app. Do not reuse or modify the existing SchoolHub database.
+
+Create the isolated database/user:
+
+```bash
+cd /var/www/field-crm
+DB_PASSWORD='replace-with-a-long-random-password' bash deploy/scripts/setup-postgres.sh
+```
+
+Create `/var/www/field-crm/api/.env` with the generated `DATABASE_URL`:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/field_crm?schema=public"
+DATABASE_URL="postgresql://field_crm_app:CHANGE_ME@localhost:5432/field_crm?schema=public"
 JWT_SECRET="replace-this-with-a-long-random-secret"
 PORT="3001"
 CORS_ORIGIN="https://field.schoolhub.co.ke"
@@ -118,6 +132,7 @@ After DNS is pointed to the VPS and the repo is available at `/var/www/field-crm
 
 ```bash
 cd /var/www/field-crm
+DB_PASSWORD='replace-with-a-long-random-password' bash deploy/scripts/setup-postgres.sh
 bash deploy/scripts/deploy-vps.sh
 ```
 
