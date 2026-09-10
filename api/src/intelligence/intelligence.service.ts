@@ -8,6 +8,26 @@ import { CampaignRole, CampaignMemberStatus } from '@prisma/client';
 export class IntelligenceService {
   constructor(private prisma: PrismaService) {}
 
+  private normalizeOptionalFields<T extends Record<string, any>>(dto: T): T {
+    const nullableTextFields = [
+      'source',
+      'intell',
+      'bestTimeToVisit',
+      'location',
+      'estimatedStudents',
+      'schoolType',
+      'hasSystem',
+    ];
+
+    return nullableTextFields.reduce(
+      (normalized, field) => ({
+        ...normalized,
+        [field]: typeof normalized[field] === 'string' && normalized[field].trim() === '' ? null : normalized[field],
+      }),
+      { ...dto },
+    );
+  }
+
   private validateStatusTransition(currentStatus: string, nextStatus: string, bookedDate?: string | null) {
     if (currentStatus === nextStatus) return;
 
@@ -62,13 +82,15 @@ export class IntelligenceService {
       }
     }
 
+    const data = this.normalizeOptionalFields(dto);
+
     return this.prisma.intelligence.create({
       data: {
-        ...dto,
+        ...data,
         recordedById: userId,
-        campaignId: dto.campaignId || null,
-        plannedVisitDate: dto.plannedVisitDate ? new Date(dto.plannedVisitDate) : undefined,
-        bookedDate: dto.bookedDate ? new Date(dto.bookedDate) : undefined,
+        campaignId: data.campaignId || null,
+        plannedVisitDate: data.plannedVisitDate ? new Date(data.plannedVisitDate) : undefined,
+        bookedDate: data.bookedDate ? new Date(data.bookedDate) : undefined,
       } as any,
     });
   }
@@ -127,12 +149,14 @@ export class IntelligenceService {
         this.validateStatusTransition(record.status, dto.status, dto.bookedDate);
       }
 
+      const data = this.normalizeOptionalFields(dto);
+
       return tx.intelligence.update({
         where: { id },
         data: {
-          ...dto,
-          plannedVisitDate: dto.plannedVisitDate ? new Date(dto.plannedVisitDate) : dto.plannedVisitDate,
-          bookedDate: dto.bookedDate ? new Date(dto.bookedDate) : dto.bookedDate,
+          ...data,
+          plannedVisitDate: data.plannedVisitDate ? new Date(data.plannedVisitDate) : data.plannedVisitDate,
+          bookedDate: data.bookedDate ? new Date(data.bookedDate) : data.bookedDate,
         } as any,
       });
     });

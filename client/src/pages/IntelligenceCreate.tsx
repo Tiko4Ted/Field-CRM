@@ -9,11 +9,11 @@ import api from '../lib/api';
 import { useCampaign } from '../lib/CampaignContext';
 
 const intellSchema = z.object({
-  name: z.string().min(1, 'School name is required'),
-  source: z.string().min(1, 'Source is required'),
-  intell: z.string().min(1, 'Intelligence details are required'),
-  bestTimeToVisit: z.string().min(1, 'Required'),
-  location: z.string().min(1, 'Required'),
+  name: z.string().trim().min(1, 'School name is required'),
+  source: z.string().optional(),
+  intell: z.string().optional(),
+  bestTimeToVisit: z.string().optional(),
+  location: z.string().optional(),
   estimatedStudents: z.string().optional(),
   schoolType: z.string().optional(),
   hasSystem: z.string().optional(),
@@ -21,6 +21,11 @@ const intellSchema = z.object({
 });
 
 type IntellForm = z.infer<typeof intellSchema>;
+
+function nullableString(value?: string) {
+  const trimmed = value?.trim();
+  return trimmed ? trimmed : null;
+}
 
 export default function IntelligenceCreate() {
   const navigate = useNavigate();
@@ -32,14 +37,21 @@ export default function IntelligenceCreate() {
     resolver: zodResolver(intellSchema),
     defaultValues: {
       name: '', source: '', intell: '', bestTimeToVisit: '', location: '',
-      estimatedStudents: '', schoolType: 'Private', hasSystem: 'Unknown', plannedVisitDate: ''
+      estimatedStudents: '', schoolType: '', hasSystem: '', plannedVisitDate: ''
     },
   });
 
   const createIntell = useMutation({
     mutationFn: async (data: IntellForm) => {
       const payload = {
-        ...data,
+        name: data.name.trim(),
+        source: nullableString(data.source),
+        intell: nullableString(data.intell),
+        bestTimeToVisit: nullableString(data.bestTimeToVisit),
+        location: nullableString(data.location),
+        estimatedStudents: nullableString(data.estimatedStudents),
+        schoolType: nullableString(data.schoolType),
+        hasSystem: nullableString(data.hasSystem),
         ...(campaignId ? { campaignId } : {}),
         plannedVisitDate: data.plannedVisitDate ? new Date(data.plannedVisitDate).toISOString() : null
       };
@@ -132,6 +144,7 @@ export default function IntelligenceCreate() {
               className="w-full h-11 px-4 rounded-xl border border-border bg-card text-sm
                          focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             >
+              <option value="">Not specified</option>
               <option value="Private">Private</option>
               <option value="Public">Public</option>
             </select>
@@ -146,6 +159,7 @@ export default function IntelligenceCreate() {
               className="w-full h-11 px-4 rounded-xl border border-border bg-card text-sm
                          focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all"
             >
+              <option value="">Not specified</option>
               <option value="Unknown">Unknown</option>
               <option value="Yes">Yes</option>
               <option value="No">No</option>

@@ -7,10 +7,10 @@ import { useCampaign } from '../lib/CampaignContext';
 interface Intelligence {
   id: string;
   name: string;
-  source: string;
-  intell: string;
-  bestTimeToVisit: string;
-  location: string;
+  source: string | null;
+  intell: string | null;
+  bestTimeToVisit: string | null;
+  location: string | null;
   status: string;
   bookedDate: string | null;
 }
@@ -64,7 +64,7 @@ export default function IntelligenceBooked() {
           </div>
 
           <h3 className="text-base font-semibold text-foreground pr-16">{record.name}</h3>
-          <p className="text-xs text-muted-foreground font-medium mt-0.5">Source: {record.source}</p>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">Source: {record.source || 'Not specified'}</p>
           
           <div className="mt-3 p-3 bg-indigo-50/50 rounded-xl border border-indigo-100">
             <p className="text-sm font-semibold text-indigo-900">
@@ -78,7 +78,7 @@ export default function IntelligenceBooked() {
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
                 <MapPin className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[120px]">{record.location}</span>
+                <span className="truncate max-w-[120px]">{record.location || 'Not specified'}</span>
               </div>
             </div>
 

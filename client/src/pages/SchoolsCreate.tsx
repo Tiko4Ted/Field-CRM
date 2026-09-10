@@ -11,10 +11,10 @@ import api from '../lib/api';
 interface Intelligence {
   id: string;
   name: string;
-  source: string;
-  intell: string;
-  bestTimeToVisit: string;
-  location: string;
+  source: string | null;
+  intell: string | null;
+  bestTimeToVisit: string | null;
+  location: string | null;
   plannedVisitDate: string | null;
   status: string;
 }
@@ -71,10 +71,12 @@ export default function SchoolsCreate() {
       if (record) {
         schoolForm.setValue('name', record.name);
         schoolForm.setValue('notes', record.intell || '');
-        schoolForm.setValue(
-          'followUpNotes',
-          `Source: ${record.source}. Best time to visit: ${record.bestTimeToVisit}. Location: ${record.location}.`,
-        );
+        const followUpParts = [
+          record.source ? `Source: ${record.source}` : null,
+          record.bestTimeToVisit ? `Best time to visit: ${record.bestTimeToVisit}` : null,
+          record.location ? `Location: ${record.location}` : null,
+        ].filter(Boolean);
+        schoolForm.setValue('followUpNotes', followUpParts.join('. '));
       }
     }
   }, [plannedIntell, selectedIntellId, schoolForm]);
@@ -88,10 +90,12 @@ export default function SchoolsCreate() {
       if (record) {
         schoolForm.setValue('name', record.name);
         schoolForm.setValue('notes', record.intell || '');
-        schoolForm.setValue(
-          'followUpNotes',
-          `Source: ${record.source}. Best time to visit: ${record.bestTimeToVisit}. Location: ${record.location}.`,
-        );
+        const followUpParts = [
+          record.source ? `Source: ${record.source}` : null,
+          record.bestTimeToVisit ? `Best time to visit: ${record.bestTimeToVisit}` : null,
+          record.location ? `Location: ${record.location}` : null,
+        ].filter(Boolean);
+        schoolForm.setValue('followUpNotes', followUpParts.join('. '));
       }
     } else {
       schoolForm.reset({ name: '', notes: '', followUpDate: '', followUpNotes: '', status: 'VISITED' });

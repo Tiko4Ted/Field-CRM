@@ -7,10 +7,10 @@ import api from '../lib/api';
 interface Intelligence {
   id: string;
   name: string;
-  source: string;
-  intell: string;
-  bestTimeToVisit: string;
-  location: string;
+  source: string | null;
+  intell: string | null;
+  bestTimeToVisit: string | null;
+  location: string | null;
   estimatedStudents: string | null;
   schoolType: string | null;
   hasSystem: string | null;
@@ -105,7 +105,7 @@ export default function IntelligenceDetails() {
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <h2 className="text-xl font-bold tracking-tight truncate">{record.name}</h2>
-              <p className="text-sm text-muted-foreground mt-1">Source: {record.source}</p>
+              <p className="text-sm text-muted-foreground mt-1">Source: {record.source || 'Not specified'}</p>
             </div>
             <span className={`text-[10px] font-bold px-2 py-1 rounded-md ${statusStyles[record.status] || 'bg-muted text-muted-foreground'}`}>
               {record.status}
@@ -115,17 +115,17 @@ export default function IntelligenceDetails() {
       </div>
 
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-        <p className="text-sm text-foreground whitespace-pre-line">{record.intell}</p>
+        <p className="text-sm text-foreground whitespace-pre-line">{record.intell || 'No details added yet.'}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
           <div className="flex items-start gap-2 text-muted-foreground">
             <MapPin className="w-4 h-4 mt-0.5 text-primary" />
-            <span>{record.location}</span>
+            <span>{record.location || 'Not specified'}</span>
           </div>
           <div className="flex items-start gap-2 text-muted-foreground">
             <Calendar className="w-4 h-4 mt-0.5 text-primary" />
             <span>Planned: {formatDate(record.plannedVisitDate)}</span>
           </div>
-          <div className="text-muted-foreground">Best time: {record.bestTimeToVisit}</div>
+          <div className="text-muted-foreground">Best time: {record.bestTimeToVisit || 'Not specified'}</div>
           <div className="text-muted-foreground">Booked: {formatDate(record.bookedDate)}</div>
           <div className="text-muted-foreground">Students: {record.estimatedStudents || 'Unknown'}</div>
           <div className="text-muted-foreground">Type: {record.schoolType || 'Unknown'}</div>

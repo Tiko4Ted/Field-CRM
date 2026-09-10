@@ -140,10 +140,10 @@ model Contact {
 model Intelligence {
   id                String    @id @default(uuid())
   name              String
-  source            String
-  intell            String
-  bestTimeToVisit   String
-  location          String
+  source            String?
+  intell            String?
+  bestTimeToVisit   String?
+  location          String?
   estimatedStudents String?
   schoolType        String?   // Private, Public
   hasSystem         String?   // Yes, No, Unknown

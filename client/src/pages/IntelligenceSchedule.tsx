@@ -7,8 +7,8 @@ import { useCampaign } from '../lib/CampaignContext';
 interface Intelligence {
   id: string;
   name: string;
-  bestTimeToVisit: string;
-  location: string;
+  bestTimeToVisit: string | null;
+  location: string | null;
   plannedVisitDate: string | null;
   status: string;
 }
@@ -90,11 +90,11 @@ export default function IntelligenceSchedule() {
                   <div className="mt-3 space-y-2">
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <Clock className="w-4 h-4 mt-0.5 text-primary" />
-                      <span>Best time: {record.bestTimeToVisit}</span>
+                      <span>Best time: {record.bestTimeToVisit || 'Not specified'}</span>
                     </div>
                     <div className="flex items-start gap-2 text-sm text-muted-foreground">
                       <MapPin className="w-4 h-4 mt-0.5 text-primary" />
-                      <span>{record.location}</span>
+                      <span>{record.location || 'Not specified'}</span>
                     </div>
                   </div>
                 </div>

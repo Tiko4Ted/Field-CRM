@@ -8,10 +8,10 @@ import { useCampaign } from '../lib/CampaignContext';
 interface Intelligence {
   id: string;
   name: string;
-  source: string;
-  intell: string;
-  bestTimeToVisit: string;
-  location: string;
+  source: string | null;
+  intell: string | null;
+  bestTimeToVisit: string | null;
+  location: string | null;
   status: string;
 }
 
@@ -74,11 +74,11 @@ export default function IntelligenceSearch() {
                        hover:border-primary/30 hover:shadow-sm transition-all"
           >
             <h3 className="text-base font-semibold text-foreground pr-16">{record.name}</h3>
-            <p className="text-sm text-foreground mt-2 line-clamp-2">{record.intell}</p>
+            <p className="text-sm text-foreground mt-2 line-clamp-2">{record.intell || 'No details added yet.'}</p>
             <div className="mt-3 flex items-center gap-3">
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 px-2 py-1 rounded-lg">
                 <MapPin className="w-3.5 h-3.5" />
-                <span className="truncate max-w-[120px]">{record.location}</span>
+                <span className="truncate max-w-[120px]">{record.location || 'Not specified'}</span>
               </div>
             </div>
           </button>
