@@ -1,0 +1,18 @@
+[Unit]
+Description=Field CRM NestJS API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/field-crm/api
+EnvironmentFile=/var/www/field-crm/api/.env
+Environment=NODE_ENV=production
+Environment=NODE_OPTIONS=--max-old-space-size=4096
+ExecStart=/usr/bin/npm run start:prod
+Restart=always
+RestartSec=5
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

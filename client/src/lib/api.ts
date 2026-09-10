@@ -1,7 +1,9 @@
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: apiBaseUrl,
 });
 
 api.interceptors.request.use((config) => {
@@ -33,7 +35,7 @@ export function getApiErrorMessage(error: unknown, fallback: string) {
   }
 
   if (!error.response) {
-    return 'Cannot reach the API server. Make sure the backend is running on http://localhost:3000.';
+    return `Cannot reach the API server. Make sure the backend is running at ${apiBaseUrl}.`;
   }
 
   if ([500, 502, 503, 504].includes(error.response.status)) {

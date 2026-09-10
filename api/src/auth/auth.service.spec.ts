@@ -2,6 +2,8 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcrypt';
+import { CampaignMemberStatus, CampaignRole, InvitationStatus } from '@prisma/client';
+import { PrismaService } from '../prisma/prisma.service.js';
 import { UsersService } from '../users/users.service.js';
 import { AuthService } from './auth.service.js';
 
@@ -15,6 +17,22 @@ describe('AuthService', () => {
   let jwtService: {
     sign: ReturnType<typeof vi.fn>;
   };
+  let prisma: {
+    campaignInvitation: {
+      findMany: ReturnType<typeof vi.fn>;
+    };
+    $transaction: ReturnType<typeof vi.fn>;
+  };
+  let transaction: {
+    campaignInvitation: {
+      update: ReturnType<typeof vi.fn>;
+    };
+    campaignMember: {
+      findUnique: ReturnType<typeof vi.fn>;
+      create: ReturnType<typeof vi.fn>;
+      update: ReturnType<typeof vi.fn>;
+    };
+  };
 
   beforeEach(async () => {
     usersService = {
@@ -25,12 +43,29 @@ describe('AuthService', () => {
     jwtService = {
       sign: vi.fn().mockReturnValue('signed-token'),
     };
+    transaction = {
+      campaignInvitation: {
+        update: vi.fn(),
+      },
+      campaignMember: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn(),
+        update: vi.fn(),
+      },
+    };
+    prisma = {
+      campaignInvitation: {
+        findMany: vi.fn().mockResolvedValue([]),
+      },
+      $transaction: vi.fn((callback) => callback(transaction)),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: UsersService, useValue: usersService },
         { provide: JwtService, useValue: jwtService },
+        { provide: PrismaService, useValue: prisma },
       ],
     }).compile();
 
@@ -57,6 +92,9 @@ describe('AuthService', () => {
       email: 'test@example.com',
       passwordHash: expect.any(String),
     });
+    expect(prisma.campaignInvitation.findMany).toHaveBeenCalledWith({
+      where: { email: 'test@example.com', status: InvitationStatus.PENDING },
+    });
     expect(result).toEqual({
       access_token: 'signed-token',
       user: {
@@ -78,6 +116,41 @@ describe('AuthService', () => {
         password: 'secret123',
       }),
     ).rejects.toThrow(ConflictException);
+  });
+
+  it('auto-accepts pending campaign invitations after registration', async () => {
+    const invite = {
+      id: 'invite-1',
+      campaignId: 'campaign-1',
+      expiresAt: new Date(Date.now() + 60_000),
+    };
+    usersService.findByEmail.mockResolvedValue(null);
+    usersService.create.mockResolvedValue({
+      id: 'user-1',
+      name: 'Test User',
+      email: 'test@example.com',
+      passwordHash: 'hash',
+    });
+    prisma.campaignInvitation.findMany.mockResolvedValue([invite]);
+
+    await service.register({
+      name: 'Test User',
+      email: 'test@example.com',
+      password: 'secret123',
+    });
+
+    expect(transaction.campaignInvitation.update).toHaveBeenCalledWith({
+      where: { id: 'invite-1' },
+      data: { status: InvitationStatus.ACCEPTED, acceptedAt: expect.any(Date) },
+    });
+    expect(transaction.campaignMember.create).toHaveBeenCalledWith({
+      data: {
+        campaignId: 'campaign-1',
+        userId: 'user-1',
+        role: CampaignRole.MEMBER,
+        status: CampaignMemberStatus.ACTIVE,
+      },
+    });
   });
 
   it('validates a login password', async () => {
