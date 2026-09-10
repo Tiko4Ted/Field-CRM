@@ -58,7 +58,7 @@ export default function SchoolsLayout() {
       </header>
 
       {/* Page content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6 pb-bottom-nav animate-page">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-3 pb-bottom-nav animate-page">
         <Outlet />
       </main>
 

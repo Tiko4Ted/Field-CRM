@@ -162,12 +162,7 @@ export default function SchoolsCreate() {
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold tracking-tight">New School Record</h2>
-        <p className="text-sm text-muted-foreground mt-1">Add a school you've visited and its contacts.</p>
-      </div>
-
+    <div className="space-y-4">
       {/* Import from Intelligence */}
       {plannedIntell.length > 0 && (
         <div className="p-4 rounded-xl border border-primary/20 bg-primary/5">
@@ -198,10 +193,10 @@ export default function SchoolsCreate() {
       <form
         id="school-form"
         onSubmit={schoolForm.handleSubmit((data) => createSchool.mutate(data))}
-        className="space-y-4"
+        className="space-y-3"
       >
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">School Name</label>
+          <label className="block text-sm font-medium text-foreground mb-1">School Name</label>
           <input
             {...schoolForm.register('name')}
             placeholder="e.g. Bristar Academy"
@@ -216,7 +211,7 @@ export default function SchoolsCreate() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Notes</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Notes</label>
           <textarea
             {...schoolForm.register('notes')}
             rows={3}
@@ -230,7 +225,7 @@ export default function SchoolsCreate() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Follow-up Date</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Follow-up Date</label>
             <input
               type="date"
               {...schoolForm.register('followUpDate')}
@@ -240,7 +235,7 @@ export default function SchoolsCreate() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-foreground mb-1.5">Status</label>
+            <label className="block text-sm font-medium text-foreground mb-1">Status</label>
             <select
               {...schoolForm.register('status')}
               className="w-full h-11 px-4 rounded-xl border border-border bg-card text-foreground text-sm
@@ -256,7 +251,7 @@ export default function SchoolsCreate() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-foreground mb-1.5">Follow-up Notes</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Follow-up Notes</label>
           <textarea
             {...schoolForm.register('followUpNotes')}
             rows={2}
